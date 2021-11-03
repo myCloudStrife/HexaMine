@@ -1,6 +1,8 @@
 require daslib/media
+require daslib/decs_boost
 require hexes
 require images
+require simple_ui
 options debugger            // uncomment for debug in VS Code
 require daslib/debug        // uncomment for debug in VS Code
 
@@ -19,6 +21,10 @@ var
     generated = false
     game_finished = false
     image_size = 1.0
+    hexes_radius = 5
+    num_mines = 20
+    num_flags = 0
+    is_in_game = false
 
 def draw_image_alpha(img; pos)
     let image_pos = pos - 0.5 * float2(image_size)
@@ -85,6 +91,7 @@ def mine_hit(hex)
     wrong_hex = hex
     game_finished = true
     show_all_mines()
+    game_end(false)
 
 def check_complete()
     for hex in get_all_valid_hexes()
@@ -101,7 +108,7 @@ def cover_hex(hex_coord)
     if !is_cover_allowed(val) || (val & HEX_INVALID) == HEX_INVALID
         return
     if !generated
-        generate_mines(hex_coord, 99)
+        generate_mines(hex_coord, num_mines)
         generated = true
     if (val & HEX_MINE) == HEX_MINE
         mine_hit(hex_coord)
@@ -123,21 +130,51 @@ def cover_hex(hex_coord)
     if check_complete()
         show_all_mines()
         game_finished = true
+        game_end(true)
 
 def flag_hex(hex_coord)
     let val = get_hex_val(hex_coord)
     if (val & HEX_UNCOVERED) != HEX_UNCOVERED || (val & HEX_INVALID) == HEX_INVALID
         return
     set_hex_val(hex_coord, val ^ HEX_FLAG, HEX_FLAG)
+    if (val & HEX_FLAG) == HEX_FLAG
+        num_flags--
+    else
+        num_flags++
+
+def start_game(hexes, mines: int; view_scale: float)
+    restart()
+    init_hexes(hexes)
+    hexes_radius = hexes
+    num_mines = mines
+    num_flags = 0
+    update_view_scale(view_scale)
+    is_in_game = true
+    generated = false
+    game_finished = false
+    image_size = 1.4 * view_scale
+    wrong_hex = int2(-1, -1)
+
+def press_callback(btype: ButtonTypes): void
+    if btype == ButtonTypes GAME_MODE_BEGINNER
+        start_game(5, 20, 30.0)
+    elif btype == ButtonTypes GAME_MODE_INTERMEDIATE
+        start_game(8, 50, 25.0)
+    elif btype == ButtonTypes GAME_MODE_EXPERT
+        start_game(11, 99, 20.0)
+    elif btype == ButtonTypes RESTART
+        start_game(hexes_radius, num_mines, view_scale)
+    elif btype == ButtonTypes MAIN_MENU
+        is_in_game = false
+        main_menu()
 
 // 'initialize' runs once when game starts and every hot-reload
 [export]
 def initialize(is_hard_reload: bool)
-    init_hexes(11)
+    is_in_game = false
+    button_pressed_callback = @@press_callback
+    main_menu()
     init_images()
-    image_size = 1.4 * view_scale
-    set_font_size(view_scale)
-    generated = false
     if is_hard_reload
         set_window_title("HexaMine")
     return
@@ -146,13 +183,16 @@ def initialize(is_hard_reload: bool)
 // dt - time elapsed since the previous update (in seconds)
 [export]
 def act(dt: float)
-    //if !game_finished
-    if get_mouse_button_down(MB_LEFT)
-        cover_hex(selected_hex)
-    if get_mouse_button_down(MB_RIGHT)
-        flag_hex(selected_hex)
-    let mouse_coord = get_mouse_position()
-    selected_hex = screen_to_hex(mouse_coord)
+    decs_stage("update")
+    if process_pressed_buttons()
+        return
+    if !game_finished
+        if get_mouse_button_down(MB_LEFT)
+            cover_hex(selected_hex)
+        if get_mouse_button_down(MB_RIGHT)
+            flag_hex(selected_hex)
+        let mouse_coord = get_mouse_position()
+        selected_hex = screen_to_hex(mouse_coord)
     if get_key(VK_ESCAPE)
         schedule_quit_game()
     return
@@ -162,5 +202,17 @@ def act(dt: float)
 [export]
 def draw
     fill_rect(0, 0, get_screen_width(), get_screen_height(), background_color)
-    draw_hexes()
+    if is_in_game
+        set_font_size(view_scale)
+        draw_hexes()
+        text_out(10., 10., "Mines left: {num_mines - num_flags}", 0xffffff)
+        if game_finished
+            let middle = float2(get_screen_width(), get_screen_height()) * 0.5
+            let panel_size = float2(300., 250.)
+            var pos = middle - panel_size * 0.5
+            enable_alpha_blend()
+            fill_rect(pos.x, pos.y, panel_size.x, panel_size.y, background_color + 0x99000000)
+            disable_alpha_blend()
+
+    decs_stage("draw")
     return

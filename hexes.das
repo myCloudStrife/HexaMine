@@ -30,9 +30,12 @@ def init_hexes(game_size_radius)
             hex = HEX_UNCOVERED
             if i + j < game_size / 2 || i + j >= game_size * 3 / 2
                 hex |= HEX_INVALID
+    update_view_scale(20.0)
+
+def update_view_scale(vs: float)
     view_offset = float2(0.0)
-    view_scale = 20.0
-    view_offset -= hex_coord_to_screen(int2(game_size_radius))
+    view_scale = vs
+    view_offset -= hex_coord_to_screen(int2(game_size / 2))
     view_offset += float2(get_screen_width(), get_screen_height()) * 0.5
 
 def hex_coord_to_screen(hex_coord: int2)
