@@ -5,6 +5,7 @@ enum ButtonTypes
     GAME_MODE_BEGINNER
     GAME_MODE_INTERMEDIATE
     GAME_MODE_EXPERT
+    GAME_MODE_INFINITY
     RESTART
     MAIN_MENU
 
@@ -54,6 +55,11 @@ def main_menu()
         apply_decs_template(cmp, [[Button pos = middle + offset, text = "Expert",
                                    size = float2(200.0, 70.0),
                                    butType = ButtonTypes GAME_MODE_EXPERT]])
+    create_entity <| @ ( eid, cmp )
+        cmp |> set("eid", eid)
+        apply_decs_template(cmp, [[Button pos = middle + 2.0 * offset, text = "Infinity",
+                                   size = float2(200.0, 70.0),
+                                   butType = ButtonTypes GAME_MODE_INFINITY]])
 
 def game_end(win)
     var text = "You died"
