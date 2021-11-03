@@ -135,11 +135,9 @@ def get_hex_val(hex_coord: int2; generate: bool = false)
     let tile_coord = int2(shifted.x / game_size, shifted.y / game_size)
     let tilekey = ((0xffff & uint(tile_coord.x)) << 16u) | (0xffff & uint(tile_coord.y))
     var tile: Tile const? = find(tiles, tilekey)
-    if !generate && tile == null //!key_exists(tiles, tilekey)
+    if !generate && tile == null
         return use_tiles ? HEX_UNCOVERED : HEX_INVALID
     let in_tile_coord = hex_coord - tile_coord * game_size
-    // let in_tile_coord = int2(hex_coord.x >= 0 ? hex_coord.x % game_size : shifted.x % game_size + n,
-    //                          hex_coord.y >= 0 ? hex_coord.y % game_size : shifted.y % game_size + n)
     let linear_coord = in_tile_coord.x * game_size + in_tile_coord.y
 
     if generate
@@ -168,8 +166,6 @@ def set_hex_val(hex_coord: int2; val: uint; mask: uint = 0xffffffff)
     find_for_edit_if_exists(tiles, make_tilekey(tile_coord)) <| $(tile)
         tile.hexes[linear_coord] = tile.hexes[linear_coord] & ~mask | val
         found = true
-    // assert(linear_coord >= 0 && linear_coord < hexes |> length())
-    // hexes[linear_coord] = hexes[linear_coord] & ~mask | val
 
 def get_neighbors(hex_coord: int2)
     var arr: array<int2>
@@ -232,13 +228,6 @@ def generate_mines(safe_hex: int2; num_mines: int)
             recalc_digit(nb)
             for nb2 in get_neighbors(nb)
                 recalc_digit(nb2)
-                // d = (get_hex_val(nb2) & HEX_DIGITS_MASK)
-                // if d > 0u
-                //     d = 0u
-                //     for nb3 in get_neighbors(nb2)
-                //         if (get_hex_val(nb3) & HEX_MINE) == HEX_MINE
-                //             d++
-                //     set_hex_val(nb2, 0u, HEX_MINE)
         return
 
     verify(is_valid_hex(safe_hex))

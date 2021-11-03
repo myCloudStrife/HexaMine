@@ -3,8 +3,8 @@ require daslib/decs_boost
 require hexes
 require images
 require simple_ui
-options debugger            // uncomment for debug in VS Code
-require daslib/debug        // uncomment for debug in VS Code
+// options debugger            // uncomment for debug in VS Code
+// require daslib/debug        // uncomment for debug in VS Code
 
 let
     background_color = 0x333333
@@ -53,9 +53,6 @@ def draw_hex(hex)
 
     if (val & HEX_UNCOVERED) == HEX_UNCOVERED
         var highlight = 0x000000
-        // var tc = get_tile_coord(hex)
-        // if (tc.x + tc.y) % 2 == 0
-        //     highlight = 0x000033
         if !game_finished && hex == selected_hex && (val & HEX_UNCOVERED) == HEX_UNCOVERED
             highlight = 0x222222
         elif game_finished && (val & (HEX_FLAG | HEX_MINE)) == (HEX_FLAG | HEX_MINE)
@@ -65,8 +62,6 @@ def draw_hex(hex)
         fill_convex_polygon(get_hex_vertices(hex, 0.8), 0x999999 + highlight)
         if (val & HEX_FLAG) == HEX_FLAG
             draw_image_alpha(flag_image, hex_coord_to_screen(hex))
-        // if (val & HEX_MINE) == HEX_MINE
-        //     draw_image_alpha(mine_image, hex_coord_to_screen(hex))
         return
     else
         if (val & HEX_RED) == HEX_RED
@@ -90,10 +85,6 @@ def draw_hexes()
     else
         for hex in get_all_visible_hexes()
             draw_hex(hex)
-
-    // for hex in get_all_valid_hexes()
-    //     let poly = get_hex_vertices(hex)
-    //     polygon(poly, 0x000000)
 
 def show_all_mines()
     if infinity
